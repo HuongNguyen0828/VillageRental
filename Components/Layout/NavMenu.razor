@@ -1,0 +1,97 @@
+﻿@using VillageRental.Data
+@inject NavigationManager navigationManager
+
+
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">VillageRental</a>
+    </div>
+</div>
+
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+
+<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+
+    <nav class="flex-column">
+    @*     <div class="nav-item px-3"> *@
+    @*         <NavLink class="nav-link" href="" Match="NavLinkMatch.All"> *@
+    @*             <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home *@
+    @*         </NavLink> *@
+    @*     </div> *@
+
+    @if (Setting.UserInfo != null)
+    {
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="dashboard">
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Dashboard
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+                <NavLink class="nav-link" href="cart">
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Cart
+            </NavLink>
+        </div>
+
+    }
+    @if (Setting.AdminInfo != null)
+    {
+        <div class="nav-item px-3"> 
+          <NavLink class="nav-link" href="" Match="NavLinkMatch.All"> 
+                 <span  aria-hidden="true"></span> 
+             </NavLink>
+        </div> 
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="adminhome">
+                    <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Admin Home
+            </NavLink>
+        </div>
+             <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="categoryList">
+                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Category
+                </NavLink>
+            </div>
+
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="equipmentList">
+                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Equipment
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="userList">
+                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Customer
+                </NavLink>
+            </div>
+
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="makeReport">
+                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Report
+                </NavLink>
+            </div>
+
+    }
+
+
+        <div class="logout-container">
+            <NavLink class="nav-link" href="#" @onclick="LogOut">
+                Log out
+            </NavLink>
+        </div>
+    </nav>
+</div>
+
+@code {
+
+    //Sigout option
+    private void LogOut()
+    {
+        // Remove out info of SecureStorage
+        SecureStorage.RemoveAll();
+        Setting.UserInfo = null;
+        Setting.AdminInfo = null;
+
+        navigationManager.NavigateTo("login");
+
+
+    }
+}

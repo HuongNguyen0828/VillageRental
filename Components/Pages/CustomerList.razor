@@ -1,0 +1,97 @@
+﻿@page "/userList"
+
+@using VillageRental.Data
+@using VillageRental.Services
+@inject NavigationManager navigationMangager
+
+<br />
+<h2 style="text-align:center">Customer</h2> <br /> <br />
+<div> <strong>Total</strong>: @userList.Count()</div>
+
+
+
+@if (userList == null)
+{
+	<p><em>Loading...</em></p>
+}
+else
+{
+	<br>
+	<br />
+	<table class="table table-striped">
+		<thead>
+			<tr style="text-align: center">
+				<th>Id</th>
+				<th>First Name</th>
+				<th>Last Name</th>
+				<th>Email</th>
+				<th>Phone Number</th>
+				<th>Address</th>
+				<th>Status</th>
+				<th>Action</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var user in userList)
+			{
+				<tr style="text-align: center">
+					<td>@user.Id</td>
+					<td>@user.FirstName</td>
+					<td>@user.LastName</td>
+					<td>@user.Email</td>
+					<td>@user.PhoneNumber</td>
+					<td>@user.Address</td>
+					<td>@user.Status</td>
+
+					<td>
+						<button class="btn-sm btn-info" @onclick=@(() => UpdateUser(user))>Edit</button>
+						<button class="btn-sm btn-danger" @onclick=@(() => DeleteUser(user))>Delete</button>
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+
+
+@code {
+	public List<User> userList = new();
+	DatabaseService databaseService = new();
+
+
+	//Error was here
+	protected override async Task OnInitializedAsync()
+	{		userList = await databaseService.GetAllUsers();
+	}
+
+
+	public void UpdateUser(User user)
+	{
+		// Transition from equipmentWithStr to equipment: just got the id
+		navigationMangager.NavigateTo($"updateUser/{user.Id}");
+	}
+
+	public async Task DeleteUser(User user)
+	{
+
+		// Display confirmation alert
+		bool answer = await App.Current.MainPage.DisplayAlert("Confirm", $"Are you sure you want to Delete {user.FirstName} {user.LastName}", "OK", "Cancel");
+		if (answer) // Ok meaning true
+		{
+			// Call service to delete
+			databaseService.DeleteUser(user.Id);
+			await App.Current.MainPage.DisplayAlert("Success", $"Delete {user.FirstName} {user.LastName} Success", "OK");
+
+			// Update state
+			userList = await databaseService.GetAllUsers();// update Current Employees
+			this.StateHasChanged(); //Update state
+		}
+		else // else canceled
+		{
+			await App.Current.MainPage.DisplayAlert("Canceled", $"Delete {user.FirstName} {user.LastName} Canceled", "OK");
+		}
+		
+	}
+
+}
+

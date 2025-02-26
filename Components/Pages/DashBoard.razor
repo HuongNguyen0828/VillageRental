@@ -1,0 +1,165 @@
+﻿@page "/dashboard"
+
+@using VillageRental.Data
+@using VillageRental.Services
+@inject NavigationManager navigationMangager
+
+
+<br /><br />
+<h5 style="margin-bottom: 2rem; text-align:center">Welcome @Setting.UserInfo.FirstName to Village Rental!!</h5>
+
+<div class="col-md-6">
+	<div class="mb-3" style="display:flex;gap: 2rem ">
+		<input sstyle="margin-left: auto;" type="text" class="form-control" @bind="searchStr" placeholder="Search equipment" />
+		<button type="button" class="btn btn-primary" @onclick="Search">Search</button>
+
+	</div>
+</div>
+@if(result != null)
+{
+	<h5> Results: @result.Count</h5>
+	<div style="display:flex; gap:1rem; flex-wrap: wrap; margin-top: 3rem">
+		@foreach (var equipment in result)
+		{
+			<div class="mb-3">
+				@if (numbers.Any(number => number == equipment.Id))
+				{
+					<div><img src=" @($" /images/{equipment.Id}.jpg")" alt="equipment" height="100" width="100" /></div>
+				}
+				else
+				{
+					<div><img src="images/000.jpg" alt="equipment" height="100" width="100" /></div>
+
+				}
+
+				<div>
+					<strong>@equipment.Name <br /></strong>
+					@equipment.CategoryStr <br />
+					@if (equipment.Quantity < 3)
+					{
+						<span style="color: red"> Only @equipment.Quantity left <br /> <br /></span>
+					}
+					$@equipment.DailyPrice <br />
+				</div>
+
+				<div>
+					@* Check if user is revoked, button is disabled *@
+					<button disabled="@(Setting.UserInfo.Status == "Revoke")" class="btn btn-primary" disable="@(Setting.UserInfo.Status == "Revoke")" @onclick=@(() => AddToCart(equipment)) style="margin-right: 0.5rem">Add to Cart</button>
+					@if (equipment.IsFavorite)
+					{
+						<img src="images/redHeart_icon.png" alt="heart_icon" @onclick="@(() => SaveEquipment(equipment))" style="width: 24px; height: 24px;" />
+
+					}
+					else
+					{
+						<img src="images/heart.svg" alt="heart_icon" @onclick="@(() => SaveEquipment(equipment))" style="width: 24px; height: 24px;" />
+					}
+
+				</div>
+			</div>
+		}
+	</div>
+	<br />
+	<br />
+	<h5> Other Equipments</h5>
+	<br /> <strong>Total: @equipmentList.Count</strong>
+}
+
+
+@if (equipmentList == null)
+{
+	<p><em>Loading...</em></p>
+}
+else
+{
+	<div style="display:flex; gap:1rem; flex-wrap: wrap">
+
+		@foreach (var equipment in equipmentList)
+		{
+			<div class="mb-3">
+				@if (numbers.Any(number => number == equipment.Id))
+				{
+					<div><img src=" @($" /images/{equipment.Id}.jpg")" alt="equipment" height="100" width="100"/></div>
+				}
+				else
+				{
+					<div><img src="images/000.jpg" alt="equipment" height="100" width="100"/></div>
+
+				}
+
+				<div> <strong>@equipment.Name <br /></strong>
+					@equipment.CategoryStr <br/>
+					@if( equipment.Quantity < 3) 
+					{
+						<span style="color: red"> Only @equipment.Quantity left <br/> <br /></span>
+					}
+					$@equipment.DailyPrice <br/>
+				</div>
+
+				<div>
+					@* Check if user is revoked, button is disabled *@
+					<button disabled="@(Setting.UserInfo.Status == "Revoke")" class="btn btn-primary" disable="@(Setting.UserInfo.Status == "Revoke")" @onclick=@(() => AddToCart(equipment)) style="margin-right: 0.5rem">Add to Cart</button>
+					@if (equipment.IsFavorite)
+					{
+						<img src="images/redHeart_icon.png"  alt="heart_icon" @onclick ="@(() => SaveEquipment(equipment))" style="width: 24px; height: 24px;" />
+
+					}
+					else
+					{
+						<img src="images/heart.svg" alt="heart_icon" @onclick="@(() => SaveEquipment(equipment))" style="width: 24px; height: 24px;" />
+					}
+
+				</div>
+			</div>
+		}
+	</div>
+}
+
+
+@code {
+	DatabaseService databaseService = new();
+	public List<EquipmentwithCategoryStr> result = new();
+
+	public List<EquipmentwithCategoryStr> equipmentList = new();
+	string searchStr = "";
+	// Equipment Image
+	List<int> numbers = new List<int> { 101, 102, 201, 202, 203, 204, 501,502};
+
+	//Error was here
+	protected override async Task OnInitializedAsync()
+	{
+		equipmentList = await databaseService.GetAllEquipment();
+
+	}
+
+	public void AddToCart(EquipmentwithCategoryStr equipment)
+	{
+		// Check is user is NOT Revoke status
+		int id = equipment.Id;
+		navigationMangager.NavigateTo($"cart/{id}");
+	}
+
+	public void SaveEquipment(EquipmentwithCategoryStr equipmentWithCategoryStr)
+	{
+
+		//toggle image
+		if (equipmentWithCategoryStr.IsFavorite)
+		{
+			equipmentWithCategoryStr.IsFavorite = false;
+		}
+		else
+		{
+			equipmentWithCategoryStr.IsFavorite = true;
+		}
+
+	}
+
+	private async Task Search()
+	{
+		result = await databaseService.SearchEquipmentWithStr(searchStr);
+		this.StateHasChanged();
+	}
+
+
+}
+

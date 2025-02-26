@@ -1,0 +1,48 @@
+﻿@page "/"
+
+@inject NavigationManager navigationManager
+
+@using Newtonsoft.Json
+@using VillageRental.Data
+@using VillageRental.Services
+
+
+<h3>AppLaunch</h3>
+Loading...
+
+
+
+@code {
+
+    protected async override Task OnInitializedAsync()
+    {
+        var userInfoStr = await SecureStorage.GetAsync(nameof(Setting.UserInfo));
+
+        var adminInfoStr = await SecureStorage.GetAsync(nameof(Setting.AdminInfo));
+
+
+        if (!string.IsNullOrWhiteSpace(adminInfoStr)) // USER AS Admin
+        {
+            //Deserialize adminsInof
+            var adminInfo = JsonConvert.DeserializeObject<Admin>(adminInfoStr);
+            Setting.AdminInfo = adminInfo;
+
+            navigationManager.NavigateTo("/adminHome");
+        }
+        else if (!string.IsNullOrWhiteSpace(userInfoStr))  // User as Customer
+        {
+           //Deserialize user as customer
+            var userInfo = JsonConvert.DeserializeObject<User>(userInfoStr);
+            Setting.UserInfo = userInfo;
+
+            navigationManager.NavigateTo("/dashboard");
+        }
+        else
+        {
+            navigationManager.NavigateTo("/login"); //
+        }
+
+
+    }
+
+}

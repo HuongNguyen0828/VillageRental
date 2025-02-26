@@ -1,0 +1,96 @@
+﻿@page "/login"
+@using Newtonsoft.Json
+@using VillageRental.Services
+@using VillageRental.Data
+@inject NavigationManager navigationManager
+
+<h3>Login</h3>
+<EditForm Model="loginModel" OnValidSubmit="Submit" class="row">
+    <DataAnnotationsValidator />
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label for="exampleInputEmail1">User Name</label>
+            <input type="email" class="form-control" @bind="loginModel.UserName" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Enter email">
+            <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
+            <ValidationMessage For="@(() => loginModel.UserName)"/>
+        </div>
+
+        <div class="mb-3">
+            <label for="exampleInputPassword1">Password</label>
+            <input type="password" class="form-control" @bind="loginModel.Password" id="exampleInputPassword1" placeholder="Password">
+            <ValidationMessage For="@(() => loginModel.Password)" />
+
+        </div>
+
+        <div style="display: flex; gap: 2rem"> 
+        <button type="submit" class="btn btn-primary ">Submit</button>
+            <NavLink class="nav-link" href="/register">
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Register here
+            </NavLink>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    LoginModel loginModel = new LoginModel();
+    AppService appService = new();
+
+    private Admin _admin = new Admin()
+        {
+            UserName = "admin@gmail.com",
+            Password = "password"
+
+        };
+
+    private async void Submit()
+    {
+        try
+        {
+            string userRole = await appService.AuthenticateUser(loginModel);
+
+            switch (userRole)
+            {
+                case "Admin":
+                    await Application.Current.MainPage.DisplayAlert("Success", $"Welcome Admin to Village Rental", "Ok");
+                    navigationManager.NavigateTo("adminHome");
+
+                    //Serialize userinfo: INSTALL Newtonsoft.JSOn in NuGet Package
+                    string adminInfoString = JsonConvert.SerializeObject(_admin);
+
+                    await SecureStorage.SetAsync(nameof(Setting.AdminInfo), adminInfoString);
+                    // Set userInfo
+                    Setting.AdminInfo =_admin;
+
+                    break;
+
+                case "User":
+                    // Get user info
+                    User validUser = await AppService.GetValidUser(loginModel);
+                    // store userName and Password in secure storage: Remomber when user login
+
+                    //Serialize userinfo: INSTALL Newtonsoft.JSOn in NuGet Package
+                    string userInfoString = JsonConvert.SerializeObject(validUser);
+
+                    await SecureStorage.SetAsync(nameof(Setting.UserInfo), userInfoString);
+                    // Set userInfo
+                    Setting.UserInfo = validUser;
+
+
+                    await Application.Current.MainPage.DisplayAlert("Success", "Welcome  to Village Rental", "Ok");
+                    navigationManager.NavigateTo("dashboard");
+
+                    break;
+
+                case "Invalid":
+                    await Application.Current.MainPage.DisplayAlert("Error", "Invalid Username or Password", "Ok");
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle any unexpected exceptions
+            await Application.Current.MainPage.DisplayAlert("Error", $"An unexpected error occurred: {ex.Message}", "Ok");
+        }
+    }
+
+}

@@ -1,0 +1,87 @@
+﻿@page "/categoryList"
+
+@using VillageRental.Data
+@using VillageRental.Services
+@inject NavigationManager navigationMangager
+
+<br />
+<h3 style="text-align: center">Category</h3>
+<br />
+<br />
+<div> <strong>Total</strong>: @categoryList.Count()</div>
+
+@if (categoryList == null)
+{
+	<p><em>Loading...</em></p>
+}
+else
+{
+	<button style="margin-right: 0" class="btn btn-primary" @onclick="AddNewCategory">Add New</button><br />
+	<table class="table table-striped">
+		<thead>
+			<tr style="text-align: center">
+				<th>Id</th>
+				<th>Name</th>
+				<th>Action</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var category in categoryList)
+			{
+				<tr style="text-align: center">
+					<td>@category.Id</td>
+					<td>@category.Name</td>
+					<td>
+						<button class="btn-sm btn-info" @onclick=@(() => UpdateCategory(category))>Edit</button>
+						<button class="btn-sm btn-danger" @onclick=@(() => DeleteCategory(category))>Delete</button>
+
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+
+
+@code {
+	public List<Category> categoryList = new();
+	DatabaseService databaseService = new();
+
+	
+	//Error was here
+	protected override async Task OnInitializedAsync()
+	{
+		categoryList = await databaseService.GetAllCategories();
+	}
+
+	public void AddNewCategory()
+	{
+		navigationMangager.NavigateTo("addCategory");
+	}
+
+	public void UpdateCategory(Category category)
+	{
+		navigationMangager.NavigateTo($"updateCategory/{category.Id}");
+	}
+	public async Task DeleteCategory(Category category)
+	{
+		// Display confirmation alert
+		bool answer = await App.Current.MainPage.DisplayAlert("Warning", $"Are you sure you want to Delete Category {category.Name}?\n\n Delelete {category.Name} will delete ALL equipment associated with this category.", "OK", "Cancel");
+		if (answer) // Ok meaning true
+		{
+			// Call service to delete
+			databaseService.DeleteCategory(category.Id);
+
+			await App.Current.MainPage.DisplayAlert("Success", $"Delete Category {category.Name} Success", "OK");
+
+			// Update state
+			categoryList = await databaseService.GetAllCategories();
+			this.StateHasChanged(); //Update state
+		}
+		else // else canceled
+		{
+			await App.Current.MainPage.DisplayAlert("Canceled", $"Delete Category {category.Name} Canceled", "OK");
+		}
+	}
+
+}

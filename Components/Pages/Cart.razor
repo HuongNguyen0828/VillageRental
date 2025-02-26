@@ -1,0 +1,175 @@
+﻿@page "/cart/{EquipmentId:int}"
+
+@using VillageRental.Data
+@using VillageRental.Services
+@inject NavigationManager navigationManager
+
+@if (EquipmentId == 0)
+{
+    <p> Your cart is currently empty</p>
+}
+else
+{
+    <h3>Rental Detail for @equipment.Name</h3>
+
+    <p style="margin-right: 0; color: red"><strong> Total: $@total</strong></p>
+
+    <div style="display: flex; gap: 5rem;">
+        <div>
+            <EditForm Model="rental" OnValidSubmit="Submit" class="row">
+                <DataAnnotationsValidator />
+                <div>
+                    <div class="mb-3">
+                        <label class="form-label"> Equipment Name:</label>
+                        <input type="text" class="form-control" @bind="equipment.Name" placeholder="Equipment Name" readonly />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"> Equipment Category:</label>
+                        <input type="text" class="form-control" @bind="equipment.CategoryStr" placeholder="Equipment Name" readonly />
+                    </div>
+                    <div style="display: flex; gap: 8rem ">
+                        <label class="form-label">Quantity:</label>
+                        <input type="number" class="form-control" @bind="rental.Quantity" min="1" max="@equipment.Quantity" />
+                        <ValidationMessage For="@(() => equipment.Quantity)" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label"> Start Date:Format YYYY-MM-DD</label>
+                        <input type="date" class="form-control" @bind="rental.StartDate" placeholder="Start Date" />
+                        <ValidationMessage For="@(() => rental.StartDate)" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"> Duration: How many days you want to rent</label>
+                        <input type="number" class="form-control" @bind="rental.Duration" min="1" placeholder="Duration" />
+                        <ValidationMessage For="@(() => rental.Duration)" />
+                    </div>
+
+                    <div style="display:flex; gap: 1rem">
+                        <button type="submit" class="btn btn-sm btn-success">Proceed</button>
+                        <NavLink class="nav-link" href="/dashboard">
+                            <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Back to Dash Board
+                        </NavLink>
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+
+        <div>
+            @if (numbers.Any(number => number == equipment.Id))
+            {
+                <div><img src=" @($" /images/{equipment.Id}.jpg")" alt="equipment" height="250" width="250" /></div>
+            }
+            else
+            {
+                <div><img src="images/000.jpg" alt="equipment" height="100" width="100" /></div>
+
+            }
+            <br />
+            <p><strong> Description</strong> @equipment.Description</p>
+        </div>
+    </div>
+
+
+
+
+
+}
+
+
+
+
+
+
+@code {
+
+    [Parameter]
+    public int EquipmentId { get; set; }
+    // Equipment Image
+    List<int> numbers = new List<int> { 101, 102, 201, 202, 203, 204, 501, 502 };
+
+    DatabaseService databaseService = new();
+
+    RentAEquipment rental = new();
+    EquipmentwithCategoryStr equipment = new();
+
+    decimal total;
+
+    protected override async Task OnInitializedAsync()
+    {// If EquipmentId is null, assign 0; otherwise, assign the value of EquipmentId.
+        if (EquipmentId > 0)
+        {
+            equipment = await databaseService.GetEquipmentWithCategoryStr(EquipmentId);
+            total = equipment.DailyPrice;
+            rental.Quantity = 1;
+            rental.Duration = 1;
+            rental.StartDate = DateOnly.FromDateTime(DateTime.Now);
+
+            this.StateHasChanged();
+        }
+
+        
+    }
+
+    // MUST CHECK if endDate > start date
+    // And MUST chech startDate >= rentalDate == current datetime
+
+    private int HandleMinus()
+    {
+        if (rental.Quantity >= 2) rental.Quantity--;
+        return rental.Quantity;
+    }
+    private int HandlePlus()
+    {
+        if (rental.Quantity < equipment.Quantity) rental.Quantity++;
+        return rental.Quantity;
+    }
+
+    private async Task Submit()
+    {
+        // Need fill in: id, customerId, rental date, quantity, totalCost
+        rental.ID = await databaseService.GetRentalNextId();
+        rental.CustomerId = Setting.UserInfo.Id;
+        rental.EquipmentId = EquipmentId; // Use 0 as a fallback if EquipmentId is null
+        rental.RentalDate = DateTime.Now;
+        rental.TotalCost = rental.Duration * equipment.DailyPrice * rental.Quantity;
+        // Update Total
+        total = rental.TotalCost;
+
+        //Update UI for total Cost
+        this.StateHasChanged();
+
+        
+        // Notice Customer
+        bool answer =  await Application.Current.MainPage.DisplayAlert("Success", $"Renting: {equipment.Name} is set.\n Total Cost: ${total}\nDo you want to proceed", "Ok","Cancel");
+        if (answer)
+        {
+            // call the add new rental methed
+            await databaseService.AddNewRental(rental);
+
+            // Update quantity for equipment
+            equipment.Quantity -= rental.Quantity;
+            Equipment update = new Equipment
+                {
+                    Id = EquipmentId, // Use 0 as a fallback if EquipmentId is null
+
+                    Name = equipment.Name,
+                    CategoryId = equipment.CategoryId,
+                    Quantity = equipment.Quantity,
+                    Description = equipment.Description,
+                    DailyPrice = equipment.DailyPrice
+                };
+            // AVOID using void in async function as it will not await for other function, but interfer ==> EXCEPTION: CONNECTION NOT CLOSE after databaseService.AddNewRental(rental); is called
+            await databaseService.UpdateEquipment(EquipmentId, update);
+            // Render to success page
+            navigationManager.NavigateTo("/success");
+        }
+        else
+        {
+            await Application.Current.MainPage.DisplayAlert("Cancel", $"Renting: {equipment.Name} with total Cost: ${total} is Canceled.\n ", "Ok");
+
+        }
+
+    }
+
+
+}

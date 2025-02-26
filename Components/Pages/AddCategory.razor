@@ -1,0 +1,100 @@
+﻿@page "/addCategory"
+@page "/updateCategory/{CategoryId:int}"
+
+@using VillageRental.Data
+@using VillageRental.Services
+<br /> <br />
+@if(category.Id > 0)
+{
+    <h3 style="text-align: center">Update Category @category.Name</h3>
+}
+else
+{
+    <h3 style="text-align: center">Adding New Category</h3>
+}
+<br /><br />
+    <EditForm Model="category" OnValidSubmit="Submit" class="row" style="margin: auto">
+        <DataAnnotationsValidator />
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label class="form-label">ID:</label>
+                <input type="text" class="form-control" @bind="category.Id" placeholder="Category ID will be autofilled" readonly />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Category Name:</label>
+                <input type="text" class="form-control" @bind="category.Name" placeholder="Category Name" focus />
+                <ValidationMessage For="@(() => category.Name)" />
+            </div>
+            <div style="display:flex; gap: 1rem">
+                <button type="submit" class="btn btn-sm btn-success">Submit</button>
+            <NavLink class="nav-link" href="/categoryList">
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Back to Category List
+            </NavLink>
+            </div>
+        </div>
+    </EditForm>
+
+@code {
+    [Parameter]
+    public int CategoryId { get; set; }
+
+    Category category = new();
+    DatabaseService databaseService = new();
+
+    protected async override void OnInitialized()
+    {
+        int id = CategoryId;
+
+        // get the category to update
+        Category updateCategory = await databaseService.GetCategory(id);
+
+        if (id > 0) // meaning edit
+        {
+            category.Id = updateCategory.Id;
+            category.Name = updateCategory.Name;
+
+            this.StateHasChanged();
+        }
+    }
+  
+    private async Task Submit()
+    {
+        // Allow adding more category consecutively
+        if (CategoryId == 0) // Add
+        {
+            // get new Id: nextId
+            int id = await databaseService.GetNextCategoryId();
+            // Bind new Id to current 0 of Id input
+            category.Id = id;
+            this.StateHasChanged();
+            
+            // Save new category into Database
+            databaseService.AddNewCategory(category);
+
+            //Message  Alert for user
+            await Application.Current.MainPage.DisplayAlert("Success", $"New Category: {category.Name} is added\nNewId: {id}", "Ok");
+            // Reset all input for other category
+
+            category.Name = "";
+        } 
+
+        else // Update
+        {
+            int id = CategoryId;
+
+            Category newCategory = new Category
+                {
+                    Id = id,
+                    Name = category.Name
+                };
+
+                // Update category into Database
+                databaseService.UpdateCategory(id, newCategory);
+                //Message  Alert for user
+                await Application.Current.MainPage.DisplayAlert("Success", $"Update Category: {category.Name}", "Ok");
+
+
+        }
+
+    }
+}

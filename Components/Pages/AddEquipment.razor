@@ -1,0 +1,139 @@
+﻿@page "/addEquipment"
+@page "/updateEquipment/{EquipmentId:int}"
+
+@using VillageRental.Data
+@using VillageRental.Services
+<br />
+<br />
+@if (equipment.Id > 0)
+{
+    <h3 style="text-align: center">Update Category @equipment.Name</h3>
+}
+else
+{
+    <h3 style="text-align: center">Adding New Category</h3>
+}
+<em><strong>Guidance!:</strong>Equipment Id will be auto generated based on category of the equipment</em><br /><br />
+
+<EditForm Model="equipment" OnValidSubmit="Submit" class="row">
+    <DataAnnotationsValidator />
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label class="form-label"> Equipment ID: (start with categoryId) </label>
+            <input type="text" class="form-control" @bind="equipment.Id" placeholder="Equipment ID will be autofilled" readonly />
+        </div>
+        <div class="mb-3">
+            <label class="form-label"> Equipment Name:</label>
+            <input type="text" class="form-control" @bind="equipment.Name" placeholder="Equipment Name" focus />
+            <ValidationMessage For="@(() => equipment.Name)" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label"> Equipment Category:</label>
+            <select @bind="equipment.CategoryId">
+                <option disabled>--Select a category--</option>
+                @foreach(Category category in availableCategories)
+                {
+                    <option value="@category.Id">@category.Id - @category.Name</option>
+                }
+            </select>
+            <ValidationMessage For="@(() => equipment.CategoryId)" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label"> Equipment Quantity:</label>
+            <input type="text" class="form-control" @bind="equipment.Quantity" placeholder="Equipment Quantity" />
+            <ValidationMessage For="@(() => equipment.Quantity)" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label"> Description:</label>
+            <input type="text" class="form-control" @bind="equipment.Description" placeholder="Equipment Description" />
+            <ValidationMessage For="@(() => equipment.Description)" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label"> Daily Price:</label>
+            <input type="text" class="form-control" @bind="equipment.DailyPrice" placeholder="Daily Price" />
+            <ValidationMessage For="@(() => equipment.DailyPrice)" />
+        </div>
+
+        <div style="display:flex; gap: 1rem">
+            <button type="submit" class="btn btn-sm btn-success">Submit</button>
+            <NavLink class="nav-link" href="/equipmentList">
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Back to Equipment List
+            </NavLink>
+        </div>
+    </div>
+</EditForm>
+@code {
+    [Parameter]
+    public int EquipmentId { get; set; }
+
+
+    Equipment equipment  = new ();
+    ///  <summary>
+    /// NEED to FETCH categoryName in category to let user choose from Drop down menu
+    /// </summary>
+    List<Category> availableCategories = new();
+    DatabaseService databaseService = new();
+
+    protected async override void OnInitialized()
+    {
+
+        availableCategories = await databaseService.GetAllCategories();
+
+        // get the category to update
+        Equipment updateEquipment = await databaseService.GetEquipment(EquipmentId);
+
+        if (EquipmentId > 0) // update
+        {
+            equipment.Id = updateEquipment.Id;
+            equipment.Name = updateEquipment.Name;
+            equipment.CategoryId = updateEquipment.CategoryId;
+            equipment.Quantity = updateEquipment.Quantity;
+            equipment.Description = updateEquipment.Description;
+            equipment.DailyPrice = updateEquipment.DailyPrice;
+            this.StateHasChanged();
+        }
+    }
+
+    private async Task Submit()
+    {
+        if (EquipmentId == 0) // adding new
+        {
+            // get new Equipment Id
+            int newId = await databaseService.GetNextEquipmentId(equipment.CategoryId);
+            equipment.Id = newId;
+
+            // Save new category into Database
+            await databaseService.AddNewEquipment(equipment);
+            this.StateHasChanged();
+
+            //Message  Alert for user
+            await Application.Current.MainPage.DisplayAlert("Success", $"New Equipment: {equipment.Name} is added\n New Id: {newId}", "Ok");
+            // Reset all input for other category
+            equipment.Name = "";
+            equipment.CategoryId = 0;
+            equipment.Quantity = 0;
+            equipment.Description = "";
+            equipment.DailyPrice = 0;
+        }
+        else // Update
+        {
+            Equipment newEquipment = new Equipment
+                {
+                    Id = EquipmentId,
+                    Name = equipment.Name,
+                    CategoryId = equipment.CategoryId,
+                    Description = equipment.Description,
+                    DailyPrice = equipment.DailyPrice,
+                    Quantity = equipment.Quantity
+                };
+            // Update category into Database
+            await databaseService.UpdateEquipment(EquipmentId, newEquipment);
+            //Message  Alert for user
+            await Application.Current.MainPage.DisplayAlert("Success", $"Update Category: {equipment.Name}", "Ok");
+        }
+
+    }
+}

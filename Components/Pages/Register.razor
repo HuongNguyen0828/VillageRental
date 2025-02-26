@@ -1,0 +1,95 @@
+﻿@page "/register"
+@using VillageRental.Services
+@using VillageRental.Data
+@inject NavigationManager navigationManager
+
+<h3>Register</h3>
+
+<EditForm Model="registerModel" OnValidSubmit="Submit" class="row">
+    <DataAnnotationsValidator/>
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label class="form-label">First Name:</label>
+            <input type="text" class="form-control" @bind="registerModel.FirstName" placeholder="First Name" />
+            <ValidationMessage For="@(() => registerModel.FirstName)" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Last Name:</label>
+            <input type="text" class="form-control" @bind="registerModel.LastName" placeholder="Last Name" />
+            <ValidationMessage For="@(() => registerModel.LastName)" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Email:</label>
+            <input type="email" class="form-control" @bind="registerModel.Email" placeholder="Email" />
+            <ValidationMessage For="@(() => registerModel.Email)" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Address:</label>
+            <input type="text" class="form-control" @bind="registerModel.Address" placeholder="Address" />
+            <ValidationMessage For="@(() => registerModel.Address)" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Phone Number:</label>
+            <input type="text" class="form-control" @bind="registerModel.PhoneNumber" placeholder="Phone Number" />
+            <ValidationMessage For="@(() => registerModel.PhoneNumber)" />
+        </div>
+
+        <div class="mb-3">
+            <label for="exampleInputPassword1">Password</label>
+            <input type="password" class="form-control" @bind="registerModel.ConfirmPassword" id="exampleInputPassword1" placeholder="Password">
+            <ValidationMessage For="@(() => registerModel.ConfirmPassword)" />
+        </div>
+
+        <div class="mb-3" >
+            <label for="exampleInputPassword1">Confirm Password</label>
+            <input type="password" class="form-control" @bind="registerModel.Password" id="exampleInputPassword1" placeholder="Confirm Password">
+            <ValidationMessage For="@(() => registerModel.Password)" />
+        </div >
+        <div style ="display: flex; gap: 2rem">
+            <button type="submit" class="btn btn-sm btn-success">Submit</button>
+            <NavLink class="nav-link" href="/">
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Already have account?
+            </NavLink>
+        </div>
+
+    </div>
+</EditForm>
+@code {
+    RegistraterModel registerModel = new();
+    DatabaseService databaseService = new();
+
+    private async void Submit()
+    {
+        // Chec UserName/ Email UNQUIE
+        bool valid = await databaseService.CheckValidUserName(registerModel.Email);
+        if (valid)
+        {
+            int newID = await databaseService.GetNextId();
+            User newUser = new User
+                {
+                    Id = newID,
+                    UserName = registerModel.Email,
+                    Password = registerModel.Password,
+                    FirstName = registerModel.FirstName,
+                    LastName = registerModel.LastName,
+                    Email = registerModel.Email,
+                    PhoneNumber = registerModel.PhoneNumber,
+                    Address = registerModel.Address,
+                    Status = "Active"
+                };
+            databaseService.AddNewUser(newUser);
+
+            //Message  Alert for user
+            await Application.Current.MainPage.DisplayAlert("Success", $"Account for {newUser.FirstName} {newUser.LastName} is created", "Ok");
+            // navigate back to login
+            navigationManager.NavigateTo("/");
+        }
+        else
+        {
+            await Application.Current.MainPage.DisplayAlert("Success", $"Email {registerModel.Email} is already exist\nPlease choose other one", "Ok");
+
+        }
+
+        
+    }
+}

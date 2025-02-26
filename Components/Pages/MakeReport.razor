@@ -1,0 +1,22 @@
+﻿@page "/makeReport"
+
+@inject NavigationManager navigation
+<h3>Report Type</h3>
+
+
+<button type="button" class="btn btn-primary" @onclick="NavigateToReportCustomer">Rental by Customer</button>
+
+<button type="button" class="btn btn-primary" @onclick="NavigateToReportMonth">Rental by Month</button>
+
+@code {
+
+    private void NavigateToReportCustomer()
+    {
+        navigation.NavigateTo("/reportSaleByCustomer");
+    }
+    private void NavigateToReportMonth()
+    {
+        navigation.NavigateTo("/rentalReportByMonth");
+    }
+
+}

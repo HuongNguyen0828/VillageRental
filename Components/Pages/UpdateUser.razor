@@ -1,0 +1,88 @@
+﻿@page "/updateUser/{UserId:int}"
+
+@using VillageRental.Services
+@using VillageRental.Data
+@inject NavigationManager navigationManager
+
+<h3>Update User @user.FirstName @user.LastName</h3>
+
+<EditForm Model="user" OnValidSubmit="Submit" class="row">
+    <DataAnnotationsValidator/>
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label class="form-label">ID:</label>
+            <input type="text" class="form-control" @bind="user.Id" placeholder="Id" readonly />
+            <ValidationMessage For="@(() => user.Id)" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">First Name:</label>
+            <input type="text" class="form-control" @bind="user.FirstName" placeholder="First Name" readonly/>
+            <ValidationMessage For="@(() => user.FirstName)" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Last Name:</label>
+            <input type="text" class="form-control" @bind="user.LastName" placeholder="Last Name" readonly />
+            <ValidationMessage For="@(() => user.LastName)" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Email:</label>
+            <input type="email" class="form-control" @bind="user.Email" placeholder="Email" readonly />
+            <ValidationMessage For="@(() => user.Email)" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Address:</label>
+            <input type="text" class="form-control" @bind="user.Address" placeholder="Address" readonly/>
+            <ValidationMessage For="@(() => user.Address)" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Phone Number:</label>
+            <input type="text" class="form-control" @bind="user.PhoneNumber" placeholder="Phone Number" readonly />
+            <ValidationMessage For="@(() => user.PhoneNumber)" />
+        </div>
+
+        <div class="mb-3" >
+            <label for="status">Status</label>
+            <select  @bind="user.Status" id="status">
+                <option value="Active">Active: Normal Customer</option>
+                <option value="Revoke">Revoke: Can not make a rental</option>
+                <option value="Discount">Discount 10%</option>
+            </select>
+            <ValidationMessage For="@(() => user.Status)" />
+        </div >
+        <div style ="display: flex; gap: 2rem">
+            <button type="submit" class="btn btn-sm btn-success">Submit</button>
+            <NavLink class="nav-link" href="/userList">
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Back to Customers 
+            </NavLink>
+        </div>
+
+    </div>
+</EditForm>
+@code {
+    [Parameter]
+    public int UserId{ get; set; }
+
+    User user = new();
+    DatabaseService databaseService = new();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = await databaseService.GetUser(UserId);
+
+        this.StateHasChanged();
+
+    }
+    private async Task Submit()
+    {
+        bool success = await databaseService.UpdateUser(UserId, user);
+        if (success)
+        {
+            await Application.Current.MainPage.DisplayAlert("Success", $"User: {user.FirstName} {user.LastName} Status is updated to {user.Status}\n", "Ok");
+        }
+        else
+        {
+            await Application.Current.MainPage.DisplayAlert("Error", $"Fail to update User: {user.FirstName} {user.LastName} Stutus is updated to {user.Status}.\n ", "Ok");
+        }
+    }
+}
