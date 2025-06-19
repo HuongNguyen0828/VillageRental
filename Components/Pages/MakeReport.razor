@@ -1,22 +1,118 @@
 ﻿@page "/makeReport"
 
 @inject NavigationManager navigation
+@using VillageRental.Data
+@using VillageRental.Services
+@inject NavigationManager navigationMangager
+
+
 <h3>Report Type</h3>
+@{
+	var currentYear = DateTime.Now.Year;
+	var startYear = 2018;
+}
+
+<button type="button" class="btn btn-primary" @onclick="() => ReportByCustomer(selectedYear)">Rental by Customer</button>
+
+<button type="button" class="btn btn-primary" @onclick="() => ReportByMonth(selectedYear) ">Rental by Month</button>
+<br />
+<br />
 
 
-<button type="button" class="btn btn-primary" @onclick="NavigateToReportCustomer">Rental by Customer</button>
+<h6> Choose year: </h6>
+<select @bind=selectedYear name="year" class="form-control">
+	<option selected value="" class="form-select-sm">All</option>
+	@for (int year = currentYear; year >= startYear; year--)
+	{
+		<option value="@year">@year</option>
+	}
+</select>
 
-<button type="button" class="btn btn-primary" @onclick="NavigateToReportMonth">Rental by Month</button>
+
+
+@if (byMonth == true)
+{
+	<h3>Rental Report By Month</h3>
+
+	<div style="text-align: center">
+		<div> <strong>Total</strong>: @rentalList.Count()</div>
+		<div style="color: red; font-weight: bold"> Revenue: $@total</div>
+	</div>
+
+
+	@if (rentalList == null)
+	{
+		<p><em>Loading...</em></p>
+	}
+	else
+	{
+		<br>
+		<br />
+		<table class="table table-striped">
+			<thead>
+				<tr style="text-align: center">
+					<th>Month</th>
+					<th>Transaction</th>
+					<th>Revenue</th>
+				</tr>
+			</thead>
+			<tbody>
+				@foreach (var rental in rentalList)
+				{
+					<tr style="text-align: center">
+
+						<td>@rental.Month</td>
+						<td>@rental.RentalCount</td>
+						<td>$@rental.TotalCost</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	}
+
+	<NavLink class="nav-link" href="/makeReport">
+		<span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Back to Report
+	</NavLink>
+
+}
+
+
 
 @code {
 
-    private void NavigateToReportCustomer()
-    {
-        navigation.NavigateTo("/reportSaleByCustomer");
-    }
-    private void NavigateToReportMonth()
-    {
-        navigation.NavigateTo("/rentalReportByMonth");
-    }
+
+
+	private Boolean byCustomer = false;
+	private Boolean byMonth = false;
+	private int? selectedYear;
+
+	public List<RentalReportByMonthObject> rentalList = new();
+	DatabaseService databaseService = new();
+	decimal total = 0;
+
+	//Error was here
+	private async Task ReportByMonth(object year)
+	{
+		byMonth = true;
+		if (year is null) rentalList = await databaseService.GetRentalReportByMonth();
+
+
+		else
+		{
+			int yearInt = (int)year;
+			rentalList = await databaseService.GetRentalReportByMonth(yearInt);
+		}
+		foreach (RentalReportByMonthObject rental in rentalList)
+		{
+			total += rental.TotalCost;
+		}
+	}
+
+
+	private async Task ReportByCustomer(object year)
+	{
+		byCustomer = true;
+
+	}
 
 }

@@ -111,13 +111,13 @@ namespace VillageRental.Services
                             var user = new User
                             {
                                 Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                                UserName = reader.GetString(reader.GetOrdinal("userName")), 
-                                Password = reader.GetString(reader.GetOrdinal("password")), 
+                                UserName = reader.GetString(reader.GetOrdinal("userName")),
+                                Password = reader.GetString(reader.GetOrdinal("password")),
                                 FirstName = reader.GetString(reader.GetOrdinal("firstName")),
-                                LastName = reader.GetString(reader.GetOrdinal("lastName")), 
-                                Email = reader.GetString(reader.GetOrdinal("email")), 
-                                Address = reader.GetString(reader.GetOrdinal("address")), 
-                                PhoneNumber = reader.GetString(reader.GetOrdinal("phoneNumber")), 
+                                LastName = reader.GetString(reader.GetOrdinal("lastName")),
+                                Email = reader.GetString(reader.GetOrdinal("email")),
+                                Address = reader.GetString(reader.GetOrdinal("address")),
+                                PhoneNumber = reader.GetString(reader.GetOrdinal("phoneNumber")),
                                 Status = reader.GetString(reader.GetOrdinal("status"))
                             };
 
@@ -200,7 +200,7 @@ namespace VillageRental.Services
                     cmd.Parameters.AddWithValue("@id", id);
                     cmd.Parameters.AddWithValue("@status", user.Status);
                     await cmd.ExecuteNonQueryAsync();
-                    
+
                 }
             }
             catch (Exception e)
@@ -744,7 +744,7 @@ namespace VillageRental.Services
             }
             finally
             {
-                connection.Close( );
+                connection.Close();
             }
 
         }
@@ -792,7 +792,7 @@ namespace VillageRental.Services
                 await Application.Current.MainPage.DisplayAlert("Error", $"Failed to fetch Equipment List: {ex.Message}", "Ok");
             }
 
-        
+
             // Alert for user
             //await Application.Current.MainPage.DisplayAlert("Success", "Users Successfully Fetched", "Ok");
             return equipmentList;
@@ -857,6 +857,55 @@ namespace VillageRental.Services
                 // Execute query
                 using (SqlCommand cmd = new SqlCommand("SELECT COUNT(*) AS #Rental, LEFT(FORMAT(rentalDate, 'MMMM dd, yyyy'), CHARINDEX(' ', FORMAT(rentalDate, 'MMMM dd, yyyy')) - 1) AS Month, SUM(totalCost) AS Revenue FROM dbo.[rental] GROUP BY LEFT(FORMAT(rentalDate, 'MMMM dd, yyyy'), CHARINDEX(' ', FORMAT(rentalDate, 'MMMM dd, yyyy')) - 1)", connection))
                 {
+                    using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
+                    {
+
+                        while (reader.Read())
+                        {
+                            var rental = new RentalReportByMonthObject
+                            {
+                                RentalCount = reader.GetInt32(reader.GetOrdinal("#Rental")),
+                                TotalCost = reader.GetDecimal(reader.GetOrdinal("revenue")),
+                                Month = reader.GetString(reader.GetOrdinal("Month"))
+                            };
+
+                            rentalList.Add(rental);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions (e.g., log them, display an error message)
+                await Application.Current.MainPage.DisplayAlert("Error", $"Failed to fetch Equipment List: {ex.Message}", "Ok");
+            }
+
+            connection.Close();
+            // Alert for user
+            //await Application.Current.MainPage.DisplayAlert("Success", "Users Successfully Fetched", "Ok");
+            return rentalList;
+        }
+
+        public async Task<List<RentalReportByMonthObject>> GetRentalReportByMonth(int year)
+        {
+            connection.Open();
+            var rentalList = new List<RentalReportByMonthObject>();
+
+            try
+            {
+                // Execute query
+                using (SqlCommand cmd = new SqlCommand(@"
+                    SELECT 
+                        COUNT(*) AS [#Rental], 
+                        LEFT(FORMAT(rentalDate, 'MMMM dd, yyyy'), CHARINDEX(' ', FORMAT(rentalDate, 'MMMM dd, yyyy')) - 1) AS [Month], 
+                        SUM(totalCost) AS [Revenue]
+                    FROM dbo.[rental]
+                    WHERE @yearInput IS NULL OR YEAR(rentalDate) = @yearInput
+                    GROUP BY LEFT(FORMAT(rentalDate, 'MMMM dd, yyyy'), CHARINDEX(' ', FORMAT(rentalDate, 'MMMM dd, yyyy')) - 1)
+                    ", connection))
+                {
+                    // Pass null if no year is selected
+                    cmd.Parameters.AddWithValue("@yearInput", year);
                     using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
                     {
 
