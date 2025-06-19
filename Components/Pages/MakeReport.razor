@@ -94,6 +94,11 @@
 	private async Task ReportByMonth(object year)
 	{
 		byMonth = true;
+
+		// Clear out rental list on every call
+		rentalList = new();
+		total = 0;
+
 		if (year is null) rentalList = await databaseService.GetRentalReportByMonth();
 
 

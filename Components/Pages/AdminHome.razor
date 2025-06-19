@@ -1,31 +1,30 @@
 ﻿@page "/adminHome"
 
 @inject NavigationManager navigationManager
+<h1 style="text-align:center; margin: 2rem">Home</h1>
 
-<div class="container mt-5 text-center">
-    <!-- header section -->
-    <h1 class="display-4 mb-4">Home</h1>
-    <!-- button section -->
-    <div class="d-grid gap-3 col-6 mx-auto">
-        <button class="btn btn-primary btn-lg" @onclick="AddCategory">Add New Category</button>
-        <button class="btn btn-primary btn-lg" @onclick="AddEquipment">Add New Equipment</button>
-        <button class="btn btn-primary btn-lg" @onclick="AddUser">Add New User</button>
-        <button class="btn btn-primary btn-lg" @onclick="MakeReport">Make Report</button>
-    </div>
+<div style="display:flex; flex-direction: column; gap: 2rem; justify-content: space-around; margin: 4rem;">
+    <button type="button" class="btn btn-primary" @onclick="AddCategory">View Categories</button>
+    <button type="button" class="btn btn-primary" @onclick="AddEquipment">View Equipment</button>
+    <button type="button" class="btn btn-primary" @onclick="AddUser">View Customers</button>
+    <button type="button" class="btn btn-primary" @onclick="MakeReport">Make Report</button>
 </div>
+
+
+
 
 @code {
     private void AddCategory()
     {
-        navigationManager.NavigateTo("addCategory");
+        navigationManager.NavigateTo("categoryList");
     }
     private void AddEquipment()
     {
-        navigationManager.NavigateTo("addEquipment");
+        navigationManager.NavigateTo("/equipmentList");
     }
     private void AddUser()
     {
-        navigationManager.NavigateTo("addUser");
+        navigationManager.NavigateTo("userList");
     }
     private void MakeReport()
     {
