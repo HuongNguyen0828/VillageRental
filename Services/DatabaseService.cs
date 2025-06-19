@@ -856,20 +856,21 @@ namespace VillageRental.Services
             try
             {
                 // Execute query
-                using (SqlCommand cmd = new SqlCommand("@SELECT " +
-                    "r.id, r.equipmentId, " +
-                    "r.customerId, r.quantity, " +
-                    "r.rentalDate, r.startDate, " +
-                    "r.duration, r.totalCost, " +
-                    "e.name as equipment, " +
-                    "ca.name As category, " +
-                    "cu.firstname as firstname, " +
-                    "cu.LastName AS lastname " +
-                    "FROM dbo.[rental] r " +
-                    "JOIN dbo.[user] cu ON r.customerId = cu.id " +
-                    "JOIN  dbo.[equipment] e ON e.id = r.equipmentId " +
-                    "JOIN dbo.[category] ca ON e.categoryId=ca.id" +
-                    "WHERE  YEAR(rentalDate) = @yearInput ", connection))
+                using (SqlCommand cmd = new SqlCommand(@"
+                    SELECT 
+                        r.id, r.equipmentId,
+                        r.customerId, r.quantity,
+                        r.rentalDate, r.startDate,
+                        r.duration, r.totalCost,
+                        e.name AS equipment,
+                        ca.name AS category,
+                        cu.firstname AS firstname,
+                        cu.lastname AS lastname
+                    FROM dbo.[rental] r
+                    JOIN dbo.[user] cu ON r.customerId = cu.id
+                    JOIN dbo.[equipment] e ON e.id = r.equipmentId
+                    JOIN dbo.[category] ca ON e.categoryId = ca.id
+                    WHERE (@yearInput IS NULL OR YEAR(r.rentalDate) = @yearInput)", connection))
                 {
                     // Pass null if no year is selected
                     cmd.Parameters.AddWithValue("@yearInput", year);
