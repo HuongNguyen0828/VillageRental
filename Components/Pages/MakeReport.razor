@@ -77,10 +77,66 @@
 }
 
 
+@if(byMonth == true)
+{
+	<h3>Rental Report by Customers</h3>
+
+	<div style="text-align: center">
+		<div> <strong>Total</strong>: @rentalList.Count()</div>
+		<div style="color: red; font-weight: bold"> Revenue: $@total</div>
+
+	</div>
+
+
+	@if (rentalListFullInfo == null)
+	{
+		<p><em>Loading...</em></p>
+	}
+	else
+	{
+		<br>
+		<br />
+		<table class="table table-striped">
+			<thead>
+				<tr style="text-align: center">
+					<th>Id</th>
+					<th>First Name</th>
+					<th>Last Name</th>
+					<th>Date</th>
+					<th>Equipment</th>
+					<th> Quantity</th>
+					<th>Total Cost</th>
+				</tr>
+			</thead>
+			<tbody>
+				@foreach (var rental in rentalListFullInfo)
+				{
+					<tr style="text-align: center">
+						<td>@rental.ID</td>
+						<td>@rental.FirstName</td>
+						<td>@rental.LastName</td>
+						<td>@rental.RentalDate</td>
+						<td>@rental.EquipmentName</td>
+						<td>@rental.Quantity</td>
+						<td>$@rental.TotalCost</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	}
+
+	<NavLink class="nav-link" href="/makeReport">
+		<span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Back to Report
+	</NavLink>
+
+
+	
+}
+
+
+
 
 @code {
-
-
 
 	private Boolean byCustomer = false;
 	private Boolean byMonth = false;
@@ -90,8 +146,10 @@
 	DatabaseService databaseService = new();
 	decimal total = 0;
 
+	public List<RentAEquipmentFullInfo> rentalListFullInfo = new();
+
 	//Error was here
-	private async Task ReportByMonth(object year)
+	private async Task ReportByMonth(int? year)
 	{
 		byMonth = true;
 
@@ -114,9 +172,26 @@
 	}
 
 
-	private async Task ReportByCustomer(object year)
+	private async Task ReportByCustomer( int? year)
 	{
 		byCustomer = true;
+
+		// Clear out rental list on every call
+		rentalList = new();
+		total = 0;
+
+		if (year is null) rentalListFullInfo = await databaseService.GetAllRental();
+		else
+		{
+			int yearInt = (int)year;
+			rentalListFullInfo = await databaseService.GetAllRentalByYear(yearInt);
+		}
+
+
+		foreach (RentAEquipmentFullInfo rental in rentalListFullInfo)
+		{
+			total += rental.TotalCost;
+		}
 
 	}
 

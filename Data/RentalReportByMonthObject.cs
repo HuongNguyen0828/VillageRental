@@ -9,9 +9,9 @@ namespace VillageRental.Components.Pages
 {
     public class RentalReportByMonthObject
     {
-        public int RentalCount {get; set;}
-        public string Month {get; set;}
-        public decimal TotalCost { get; set;}
+        public int RentalCount { get; set; }
+        public string Month { get; set; }
+        public decimal TotalCost { get; set; }
 
     }
 }

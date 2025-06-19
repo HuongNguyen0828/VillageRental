@@ -847,6 +847,74 @@ namespace VillageRental.Services
             return rentalList;
         }
 
+
+        public async Task<List<RentAEquipmentFullInfo>> GetAllRentalByYear( int year)
+        {
+            connection.Open();
+            var rentalList = new List<RentAEquipmentFullInfo>();
+
+            try
+            {
+                // Execute query
+                using (SqlCommand cmd = new SqlCommand("@SELECT " +
+                    "r.id, r.equipmentId, " +
+                    "r.customerId, r.quantity, " +
+                    "r.rentalDate, r.startDate, " +
+                    "r.duration, r.totalCost, " +
+                    "e.name as equipment, " +
+                    "ca.name As category, " +
+                    "cu.firstname as firstname, " +
+                    "cu.LastName AS lastname " +
+                    "FROM dbo.[rental] r " +
+                    "JOIN dbo.[user] cu ON r.customerId = cu.id " +
+                    "JOIN  dbo.[equipment] e ON e.id = r.equipmentId " +
+                    "JOIN dbo.[category] ca ON e.categoryId=ca.id" +
+                    "WHERE  YEAR(rentalDate) = @yearInput ", connection))
+                {
+                    // Pass null if no year is selected
+                    cmd.Parameters.AddWithValue("@yearInput", year);
+
+                    using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
+                    {
+                        while (reader.Read())
+                        {
+                            var rentAEquipmentFullInfo = new RentAEquipmentFullInfo
+                            {
+                                ID = reader.GetInt32(reader.GetOrdinal("id")),
+                                EquipmentId = reader.GetInt32(reader.GetOrdinal("equipmentId")),
+                                CustomerId = reader.GetInt32(reader.GetOrdinal("customerId")),
+                                Quantity = reader.GetInt32(reader.GetOrdinal("quantity")),
+                                RentalDate = reader.GetDateTime(reader.GetOrdinal("RentalDate")),
+                                StartDate = DateOnly.FromDateTime(reader.GetDateTime(reader.GetOrdinal("StartDate"))),
+                                Duration = reader.GetInt32(reader.GetOrdinal("duration")),
+                                TotalCost = reader.GetDecimal(reader.GetOrdinal("totalCost")),
+                                EquipmentName = reader.GetString(reader.GetOrdinal("equipment")),
+                                FirstName = reader.GetString(reader.GetOrdinal("firstname")),
+                                LastName = reader.GetString(reader.GetOrdinal("lastname")),
+                                CategoryName = reader.GetString(reader.GetOrdinal("category"))
+
+
+                            };
+
+                            rentalList.Add(rentAEquipmentFullInfo);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions (e.g., log them, display an error message)
+                await Application.Current.MainPage.DisplayAlert("Error", $"Failed to fetch Equipment List: {ex.Message}", "Ok");
+            }
+
+            connection.Close();
+            // Alert for user
+            //await Application.Current.MainPage.DisplayAlert("Success", "Users Successfully Fetched", "Ok");
+            return rentalList;
+        }
+
+
+
         public async Task<List<RentalReportByMonthObject>> GetRentalReportByMonth()
         {
             connection.Open();
@@ -900,7 +968,7 @@ namespace VillageRental.Services
                         LEFT(FORMAT(rentalDate, 'MMMM dd, yyyy'), CHARINDEX(' ', FORMAT(rentalDate, 'MMMM dd, yyyy')) - 1) AS [Month], 
                         SUM(totalCost) AS [Revenue]
                     FROM dbo.[rental]
-                    WHERE @yearInput IS NULL OR YEAR(rentalDate) = @yearInput
+                    WHERE  YEAR(rentalDate) = @yearInput
                     GROUP BY LEFT(FORMAT(rentalDate, 'MMMM dd, yyyy'), CHARINDEX(' ', FORMAT(rentalDate, 'MMMM dd, yyyy')) - 1)
                     ", connection))
                 {
