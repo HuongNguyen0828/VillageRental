@@ -71,7 +71,7 @@
 	}
 
 	<NavLink class="nav-link" href="/makeReport">
-		<span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Back to Report
+		<span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Top
 	</NavLink>
 
 }
@@ -102,8 +102,6 @@
 					<th>Id</th>
 					<th>First Name</th>
 					<th>Last Name</th>
-					<th>Date</th>
-					<th>Equipment</th>
 					<th> Quantity</th>
 					<th>Total Cost</th>
 				</tr>
@@ -115,8 +113,6 @@
 						<td>@rental.ID</td>
 						<td>@rental.FirstName</td>
 						<td>@rental.LastName</td>
-						<td>@rental.RentalDate</td>
-						<td>@rental.EquipmentName</td>
 						<td>@rental.Quantity</td>
 						<td>$@rental.TotalCost</td>
 					</tr>
@@ -126,7 +122,7 @@
 	}
 
 	<NavLink class="nav-link" href="/makeReport">
-		<span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Back to Report
+		<span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Top
 	</NavLink>
 
 
@@ -180,13 +176,7 @@
 		rentalList = new();
 		total = 0;
 
-		if (year is null) rentalListFullInfo = await databaseService.GetAllRental();
-		else
-		{
-			int yearInt = (int)year;
-			rentalListFullInfo = await databaseService.GetAllRentalByYear(yearInt);
-		}
-
+		rentalListFullInfo = await databaseService.GetAllRentalByYear(selectedYear);
 
 		foreach (RentAEquipmentFullInfo rental in rentalListFullInfo)
 		{

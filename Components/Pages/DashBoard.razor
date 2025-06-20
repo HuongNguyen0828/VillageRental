@@ -6,7 +6,9 @@
 
 
 <br /><br />
-<h5 style="margin-bottom: 2rem; text-align:center">Welcome @Setting.UserInfo.FirstName to Village Rental!!</h5>
+<h5 style="margin-bottom: 2rem; text-align:center">
+	Welcome @(char.ToUpper(Setting.UserInfo.FirstName[0]) + Setting.UserInfo.FirstName.Substring(1).ToLower()) to Village Rental!!
+	</h5>
 
 <div class="col-md-6">
 	<div class="mb-3" style="display:flex;gap: 2rem ">
