@@ -888,7 +888,7 @@ namespace VillageRental.Services
                     GROUP BY LEFT(FORMAT(rentalDate, 'MMMM dd, yyyy'), CHARINDEX(' ', FORMAT(rentalDate, 'MMMM dd, yyyy')) - 1)
                     ";
 
-            String whereClause = year.HasValue ? "WHERE YEAR(r.rentalDate) = @yearInput" : "";
+            String whereClause = year.HasValue ? "WHERE YEAR(rentalDate) = @yearInput" : "";
             String finalQuery = string.Format(query, whereClause);
 
 
@@ -908,7 +908,7 @@ namespace VillageRental.Services
                             var rental = new RentalReportByMonthObject
                             {
                                 RentalCount = reader.GetInt32(reader.GetOrdinal("#Rental")),
-                                TotalCost = reader.GetDecimal(reader.GetOrdinal("revenue")),
+                                TotalCost = reader.GetDecimal(reader.GetOrdinal("Revenue")),
                                 Month = reader.GetString(reader.GetOrdinal("Month"))
                             };
 

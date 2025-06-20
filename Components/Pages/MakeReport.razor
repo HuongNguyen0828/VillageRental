@@ -32,7 +32,7 @@
 
 @if (byMonth == true)
 {
-	<h3>Rental Report By Month</h3>
+	<h3>Rental Report By Month in @selectedYear</h3>
 
 	<div style="text-align: center">
 		<div> <strong>Total</strong>: @rentalList.Count()</div>
@@ -79,7 +79,7 @@
 
 @if(byCustomer == true)
 {
-	<h3>Rental Report by Customers</h3>
+	<h3>Rental Report by Customers in @selectedYear</h3>
 
 	<div style="text-align: center">
 		<div> <strong>Total</strong>: @rentalList.Count()</div>
@@ -145,6 +145,7 @@
 	private async Task ReportByMonth(int? year)
 	{
 		byMonth = true;
+        byCustomer = false; // Reset byCustomer to false when switching to byMonth report
 
 		// Clear out rental list on every call
 		rentalList = new();
@@ -156,12 +157,14 @@
 		{
 			total += rental.TotalCost;
 		}
+
 	}
 
 
 	private async Task ReportByCustomer( int? year)
 	{
 		byCustomer = true;
+        byMonth = false; // Reset byMonth to false when switching to byCustomer report
 
 		// Clear out rental list on every call
 		rentalList = new();
