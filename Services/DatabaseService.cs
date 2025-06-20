@@ -895,10 +895,10 @@ namespace VillageRental.Services
             try
             {
                 // Execute query
-                using (SqlCommand cmd = new SqlCommand(query, connection))
+                using (SqlCommand cmd = new SqlCommand(finalQuery, connection))
                 {
                     // Pass null if no year is selected
-                    if (year is null) cmd.Parameters.AddWithValue("@yearInput", year);
+                    if (year is not null) cmd.Parameters.AddWithValue("@yearInput", year);
 
                     using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
                     {

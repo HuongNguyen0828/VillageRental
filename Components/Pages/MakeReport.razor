@@ -150,7 +150,7 @@
 		rentalList = new();
 		total = 0;
 
-		rentalList = await databaseService.GetRentalReportByMonth(selectedYear);
+		rentalList = await databaseService.GetRentalReportByMonth(year);
 		
 		foreach (RentalReportByMonthObject rental in rentalList)
 		{
@@ -167,7 +167,7 @@
 		rentalList = new();
 		total = 0;
 
-		rentalListFullInfo = await databaseService.GetAllRentalByYear(selectedYear);
+		rentalListFullInfo = await databaseService.GetAllRentalByYear(year);
 
 		foreach (RentAEquipmentFullInfo rental in rentalListFullInfo)
 		{
