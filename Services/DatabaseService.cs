@@ -870,7 +870,7 @@ namespace VillageRental.Services
                     JOIN dbo.[user] cu ON r.customerId = cu.id
                     JOIN dbo.[equipment] e ON e.id = r.equipmentId
                     JOIN dbo.[category] ca ON e.categoryId = ca.id
-                    WHERE (@yearInput IS NULL OR YEAR(r.rentalDate) = @yearInput)", connection))
+                    WHERE (YEAR(r.rentalDate) = @yearInput)", connection))
                 {
                     // Pass null if no year is selected
                     cmd.Parameters.AddWithValue("@yearInput", year);
