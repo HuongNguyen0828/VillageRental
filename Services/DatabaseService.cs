@@ -871,65 +871,35 @@ namespace VillageRental.Services
 
 
 
-        public async Task<List<RentalReportByMonthObject>> GetRentalReportByMonth()
+       
+
+        public async Task<List<RentalReportByMonthObject>> GetRentalReportByMonth(int? year)
         {
             connection.Open();
             var rentalList = new List<RentalReportByMonthObject>();
-
-            try
-            {
-                // Execute query
-                using (SqlCommand cmd = new SqlCommand("SELECT COUNT(*) AS #Rental, LEFT(FORMAT(rentalDate, 'MMMM dd, yyyy'), CHARINDEX(' ', FORMAT(rentalDate, 'MMMM dd, yyyy')) - 1) AS Month, SUM(totalCost) AS Revenue FROM dbo.[rental] GROUP BY LEFT(FORMAT(rentalDate, 'MMMM dd, yyyy'), CHARINDEX(' ', FORMAT(rentalDate, 'MMMM dd, yyyy')) - 1)", connection))
-                {
-                    using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
-                    {
-
-                        while (reader.Read())
-                        {
-                            var rental = new RentalReportByMonthObject
-                            {
-                                RentalCount = reader.GetInt32(reader.GetOrdinal("#Rental")),
-                                TotalCost = reader.GetDecimal(reader.GetOrdinal("revenue")),
-                                Month = reader.GetString(reader.GetOrdinal("Month"))
-                            };
-
-                            rentalList.Add(rental);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                // Handle exceptions (e.g., log them, display an error message)
-                await Application.Current.MainPage.DisplayAlert("Error", $"Failed to fetch Equipment List: {ex.Message}", "Ok");
-            }
-
-            connection.Close();
-            // Alert for user
-            //await Application.Current.MainPage.DisplayAlert("Success", "Users Successfully Fetched", "Ok");
-            return rentalList;
-        }
-
-        public async Task<List<RentalReportByMonthObject>> GetRentalReportByMonth(int year)
-        {
-            connection.Open();
-            var rentalList = new List<RentalReportByMonthObject>();
-
-            try
-            {
-                // Execute query
-                using (SqlCommand cmd = new SqlCommand(@"
+            
+            String query = @"
                     SELECT 
                         COUNT(*) AS [#Rental], 
                         LEFT(FORMAT(rentalDate, 'MMMM dd, yyyy'), CHARINDEX(' ', FORMAT(rentalDate, 'MMMM dd, yyyy')) - 1) AS [Month], 
                         SUM(totalCost) AS [Revenue]
                     FROM dbo.[rental]
-                    WHERE  YEAR(rentalDate) = @yearInput
+                    {0}
                     GROUP BY LEFT(FORMAT(rentalDate, 'MMMM dd, yyyy'), CHARINDEX(' ', FORMAT(rentalDate, 'MMMM dd, yyyy')) - 1)
-                    ", connection))
+                    ";
+
+            String whereClause = year.HasValue ? "WHERE YEAR(r.rentalDate) = @yearInput" : "";
+            String finalQuery = string.Format(query, whereClause);
+
+
+            try
+            {
+                // Execute query
+                using (SqlCommand cmd = new SqlCommand(query, connection))
                 {
                     // Pass null if no year is selected
-                    cmd.Parameters.AddWithValue("@yearInput", year);
+                    if (year is null) cmd.Parameters.AddWithValue("@yearInput", year);
+
                     using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
                     {
 

@@ -123,10 +123,7 @@
 
 	<NavLink class="nav-link" href="/makeReport">
 		<span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Top
-	</NavLink>
-
-
-	
+	</NavLink>	
 }
 
 
@@ -153,14 +150,8 @@
 		rentalList = new();
 		total = 0;
 
-		if (year is null) rentalList = await databaseService.GetRentalReportByMonth();
-
-
-		else
-		{
-			int yearInt = (int)year;
-			rentalList = await databaseService.GetRentalReportByMonth(yearInt);
-		}
+		rentalList = await databaseService.GetRentalReportByMonth(selectedYear);
+		
 		foreach (RentalReportByMonthObject rental in rentalList)
 		{
 			total += rental.TotalCost;
